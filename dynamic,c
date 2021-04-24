@@ -1,0 +1,105 @@
+#include <string.h>
+#include <unistd.h>
+#include <stdlib.h>
+#include <math.h>
+#include <stdio.h>
+#include <dlfcn.h>
+
+
+int LinkingLib1 (char* library, char* function, int* arguments,float* Res) {
+    void* lib;
+    char* error;
+    lib = dlopen(library, RTLD_LAZY);
+    error = dlerror();
+    if(error != NULL) {
+        printf("%s\n",error);
+        return -1;
+    }
+    float (*func)(int);
+    func = dlsym(lib,function);
+    error = dlerror();
+    if(error != NULL) {
+        printf("%s\n",error);
+        return -2;
+    }
+    *Res = (*func)(arguments[0]);
+    dlclose(lib);
+    return 0;
+}
+
+int LinkingLib2 (char* library, char* function, float* arguments, float* Res) {
+    void* lib;
+    char* error;
+    lib = dlopen(library, RTLD_LAZY);
+    error = dlerror();
+    if(error != NULL) {
+        printf("%s\n",error);
+        return -1;
+    }
+    float (*func)(float, float);
+    func = dlsym(lib,function);
+    error = dlerror();
+    if(error != NULL) {
+        printf("%s\n",error);
+        return -2;
+    }
+    *Res = (*func)(arguments[0],arguments[1]);
+    dlclose(lib);
+    return 0;
+}
+
+int main() {
+    char* libraryPath[2];
+    libraryPath[0] = (char*)malloc(100);
+    libraryPath[0] = strcpy(libraryPath[0],"/home/valery/src/lib1linked.so");
+    libraryPath[1] = (char*)malloc(100);
+    libraryPath[1] = strcpy(libraryPath[1],"/home/valery/src/lib2linked.so");
+
+    char* functions[2]; 
+    functions[0] = (char*)malloc(200);
+    functions[0] = strcpy(functions[0],"E");
+    functions[1] = (char*)malloc(200);
+    functions[1] = strcpy(functions[1],"Square");
+
+    int switcher = 0,command = 0;
+
+    while(scanf("%d",&command)!=EOF) {
+        
+        if(command == 0) {
+            if(switcher == 0 ) {
+                switcher = 1;
+                printf("using lib two\n");
+            } 
+            else {
+                printf("using lib one\n");
+                switcher = 0;
+            }
+        } 
+        else 
+        if(command == 1) {
+            if(command == 1) {
+            int args[1];
+            float Res;
+            scanf("%d",&args[0]);
+            if (LinkingLib1(libraryPath[switcher],functions[command-1],args,&Res) != 0) {
+                printf("ERROR\n"); 
+            }
+            printf("%f\n",Res);            
+            }
+        }
+        else
+        if(command == 2) {
+            float args[2];
+            float Res;
+            scanf("%e %e",&args[0],&args[1]);
+            if (LinkingLib2(libraryPath[switcher],functions[command-1],args,&Res)!=0) {
+                printf("ERROR\n"); 
+            }
+            else {
+            printf("%f\n",Res);
+            }
+        }
+
+    }
+} 
+
